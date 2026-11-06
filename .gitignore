@@ -23,6 +23,9 @@ venv/
 *.egg-info/
 .ipynb_checkpoints/
 
+# Generated / large sample market data
+data/demo_ticks.csv
+
 # Private study materials (do not commit)
 LEARNING_PLAN.md
 FUNDAMENTALS_MAP.md

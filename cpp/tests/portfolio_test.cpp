@@ -116,6 +116,23 @@ int main() {
     expect(book.place(bad, &err) == 0, "reject zero qty");
   }
 
+  {
+    qflow::Portfolio book(500'000);
+    qflow::Order order{};
+    order.instrument_id = 1;
+    order.side = qflow::Side::Buy;
+    order.type = qflow::OrderType::Market;
+    order.quantity = 10;
+    order.created_ts_ns = 1;
+    const qflow::OrderId id = book.place(order);
+    std::string err;
+    expect(book.apply_fill({id, 1, 1, qflow::Side::Buy, 10000, 10}, kTickSize,
+                           &err, /*commission*/ 25),
+           "buy with commission");
+    // 10 * $100 = $1000 -> 100000 cents + 25 commission
+    expect(book.cash_cents() == 500'000 - 100'000 - 25, "cash includes fee");
+  }
+
   if (failures != 0) {
     std::cerr << failures << " test(s) failed\n";
     return EXIT_FAILURE;

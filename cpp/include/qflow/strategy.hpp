@@ -5,6 +5,7 @@
 
 #include "qflow/engine.hpp"
 #include "qflow/gateway.hpp"
+#include "qflow/indicator.hpp"
 #include "qflow/order.hpp"
 #include "qflow/portfolio.hpp"
 
@@ -121,6 +122,28 @@ class BuyOnceStrategy : public Strategy {
   InstrumentId instrument_id_{0};
   Quantity quantity_{0};
   bool done_{false};
+};
+
+/**
+ * Long-only dual EMA cross: buy on bullish cross when flat, sell to flat on
+ * bearish cross. Reuses EmaCrossSignal for the indicator math.
+ */
+class DualEmaCrossStrategy : public Strategy {
+ public:
+  DualEmaCrossStrategy(InstrumentId instrument_id, Quantity quantity,
+                       std::size_t fast_period = 5, std::size_t slow_period = 20)
+      : instrument_id_(instrument_id),
+        quantity_(quantity),
+        signal_(fast_period, slow_period) {}
+
+  void on_tick(const Tick& tick, StrategyContext& ctx) override;
+
+  const EmaCrossSignal& signal() const noexcept { return signal_; }
+
+ private:
+  InstrumentId instrument_id_{0};
+  Quantity quantity_{0};
+  EmaCrossSignal signal_;
 };
 
 }  // namespace qflow

@@ -72,7 +72,7 @@ int main() {
   }
 
   {
-    qflow::RiskGate gate({});
+    qflow::RiskGate gate;
     gate.kill();
     qflow::Portfolio book(5'000'000);
     qflow::SimOrderGateway gw(book, gate, kTick);

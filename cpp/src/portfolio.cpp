@@ -45,7 +45,8 @@ OrderId Portfolio::place(Order order, std::string* error_message) {
 }
 
 bool Portfolio::apply_fill(const Fill& fill, double tick_size,
-                           std::string* error_message) {
+                           std::string* error_message,
+                           MoneyCents commission_cents) {
   if (!is_valid(fill)) {
     if (error_message != nullptr) {
       *error_message = "invalid fill";
@@ -55,6 +56,12 @@ bool Portfolio::apply_fill(const Fill& fill, double tick_size,
   if (tick_size <= 0.0) {
     if (error_message != nullptr) {
       *error_message = "tick_size must be positive";
+    }
+    return false;
+  }
+  if (commission_cents < 0) {
+    if (error_message != nullptr) {
+      *error_message = "commission must be non-negative";
     }
     return false;
   }
@@ -93,15 +100,16 @@ bool Portfolio::apply_fill(const Fill& fill, double tick_size,
 
   const MoneyCents money = notional_cents(fill.price, fill.quantity, tick_size);
   if (fill.side == Side::Buy) {
-    if (money > cash_cents_) {
+    const MoneyCents debit = money + commission_cents;
+    if (debit > cash_cents_) {
       if (error_message != nullptr) {
         *error_message = "insufficient cash";
       }
       return false;
     }
-    cash_cents_ -= money;
+    cash_cents_ -= debit;
   } else {
-    cash_cents_ += money;
+    cash_cents_ += money - commission_cents;
   }
 
   order->filled += fill.quantity;

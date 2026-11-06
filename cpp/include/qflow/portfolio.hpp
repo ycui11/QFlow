@@ -28,8 +28,13 @@ class Portfolio {
 
   OrderId place(Order order, std::string* error_message = nullptr);
 
+  /**
+   * Book a fill. commission_cents is a fixed fee charged on cash
+   * (buy: notional + fee; sell: notional - fee).
+   */
   bool apply_fill(const Fill& fill, double tick_size,
-                  std::string* error_message = nullptr);
+                  std::string* error_message = nullptr,
+                  MoneyCents commission_cents = 0);
 
   const Order* find_order(OrderId id) const;
   Order* find_order(OrderId id);

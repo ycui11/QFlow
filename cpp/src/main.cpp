@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include <string>
 
@@ -15,7 +16,7 @@ int main(int argc, char** argv) {
             << " cache_line=" << qflow::kCacheLineBytes << '\n';
 
   const std::string csv_path =
-      argc > 1 ? argv[1] : std::string("data/sample_ticks.csv");
+      argc > 1 ? argv[1] : std::string("data/demo_ticks.csv");
   constexpr double kTickSize = 0.01;
 
   qflow::CsvTickFeed feed;
@@ -25,17 +26,28 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  qflow::Portfolio portfolio(10'000'000);
-  qflow::BuyOnceStrategy strategy(1, 100);
-  qflow::Backtester backtester(portfolio, strategy, kTickSize, 1);
+  qflow::MatchCosts costs;
+  costs.slippage_ticks = 1;          // 1 tick adverse
+  costs.commission_cents = 100;      // $1.00 per fill
+
+  qflow::Portfolio portfolio(10'000'000);  // $100,000.00
+  qflow::DualEmaCrossStrategy strategy(/*instrument*/ 1, /*qty*/ 50,
+                                       /*fast*/ 5, /*slow*/ 20);
+  qflow::Backtester backtester(portfolio, strategy, kTickSize, 1, costs);
   const qflow::BacktestResult result = backtester.run(feed);
 
+  std::cout << std::fixed << std::setprecision(4);
   std::cout << "backtest csv=" << csv_path
             << " events=" << result.events_delivered
             << " fills=" << result.fills
-            << " position=" << result.final_position
+            << " closed_trades=" << result.closed_trades << '\n'
+            << "  position=" << result.final_position
             << " cash_cents=" << result.final_cash_cents
-            << " pnl_cents=" << result.realized_pnl_cents << '\n';
+            << " equity_cents=" << result.final_equity_cents << '\n'
+            << "  realized_pnl_cents=" << result.realized_pnl_cents
+            << " total_return=" << result.total_return
+            << " max_drawdown=" << result.max_drawdown
+            << " win_rate=" << result.win_rate << '\n';
 
   // Risk + paper/live boundary demo (no socket).
   qflow::RiskLimits limits;

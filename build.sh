@@ -85,7 +85,7 @@ fi
 
 if [[ "${RUN}" -eq 1 ]]; then
   echo "==> running qflow_cli"
-  "${BUILD_DIR}/qflow_cli"
+  "${BUILD_DIR}/qflow_cli" "${ROOT}/data/demo_ticks.csv"
 fi
 
 echo "==> done"
